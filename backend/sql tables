@@ -1,0 +1,150 @@
+
+
++-------------------+        +--------------------+        +---------------------+
+|    Users Table    |        |   Accounts Table   |        |   Categories Table   |
+|-------------------|        |--------------------|        |---------------------|
+| user_id (PK)      |<-------| user_id (FK)       |        | user_id (FK)         |
+| username          |        | account_id (PK)    |        | category_id (PK)     |
+| email             |        | account_name       |        | category_name        |
+| password          |        | account_type       |        | category_type        |
+| created_at        |        | balance            |        +---------------------+
++-------------------+        | created_at         |
+                             +--------------------+
+
+           ^                      ^                             ^
+           |                      |                             |
+           |                      |                             |
+           |                      |                             |
++-------------------+        +--------------------+        +---------------------+
+| Transactions Table|        |  Budgets Table     |        |Recurring Transactions|
+|-------------------|        |--------------------|        |----------------------|
+| transaction_id (PK)|<-------| user_id (FK)       |       | recurring_id (PK)    |
+| user_id (FK)      |        | category_id (FK)   |        | user_id (FK)         |
+| account_id (FK)   |        | amount             |        | account_id (FK)      |
+| category_id (FK)  |        | start_date         |        | category_id (FK)     |
+| amount            |        | end_date           |        | amount               |
+| transaction_date  |        | created_at         |        | frequency            |
+| transaction_type  |        +--------------------+        | next_due_date        |
+| created_at        |                                      | description          |
++-------------------+                                      | created_at           |
+                                                           +----------------------+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+make all the users table that has the email, password and the username of the user
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Stores different types of financial accounts
+CREATE TABLE accounts (
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    account_name VARCHAR(255) NOT NULL,
+    account_type ENUM(
+        'Bank',
+        'Credit Card',
+        'Cash',
+        'Investment',
+        'Savings'
+    ) NOT NULL,
+    balance DECIMAL(15, 2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+different categories for user transactions, such as Income or Expense
+CREATE TABLE categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    category_name VARCHAR(255) NOT NULL,
+    category_type ENUM('Income', 'Expense') NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+Stores all financial transactions
+CREATE TABLE transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    account_id INT,
+    category_id INT,
+    amount DECIMAL(15, 2) NOT NULL,
+    transaction_date DATE NOT NULL,
+    description TEXT,
+    transaction_type ENUM('Income', 'Expense', 'Transfer') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE
+    SET NULL
+);
+
+Tracks user budgets for different categories
+CREATE TABLE budgets (
+    budget_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    category_id INT,
+    amount DECIMAL(15, 2) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE CASCADE
+);
+
+Stores transactions that are recurring 
+CREATE TABLE recurring_transactions (
+    recurring_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    account_id INT,
+    category_id INT,
+    amount DECIMAL(15, 2) NOT NULL,
+    frequency ENUM('Daily', 'Weekly', 'Monthly', 'Yearly') NOT NULL,
+    next_due_date DATE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(category_id) ON DELETE
+    SET NULL
+);
